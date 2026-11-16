@@ -245,6 +245,23 @@ body.home #app{visibility:hidden}
   font-size:13.5px;font-weight:600;font-family:inherit}
 #ppPick button.alt{flex:0 0 92px;background:#2e3138;border:1px solid #43464f;color:#d7d2c8;font-weight:400}
 #ppPick .pkl{font-size:11.5px;color:#8f8a80;margin:10px 0 6px}
+#ppPick{max-height:52dvh;overflow-y:auto}
+.pphtg{background:#23262d;border:1px solid #3a3e47;color:#cfcac0;border-radius:10px;padding:10px;font-size:13px;font-family:inherit;width:100%}
+.pphint{text-align:center;font-size:12px;color:#8f8a80}
+#ppPick .pkty{display:flex;gap:5px;margin-bottom:7px;align-items:center}
+#ppPick .pkty button{flex:none;background:#2e3138;border:1px solid #43464f;color:#d7d2c8;border-radius:8px;padding:7px 9px;font-size:12.5px;font-weight:400}
+#ppPick .pkty button.on{background:var(--wine);border-color:var(--wine);color:#fff;font-weight:600}
+#ppPick .pkty button[data-pf]{width:34px;padding:7px 0;font-family:'Frank Ruhl Libre',serif;font-size:15px}
+#pkTxt{display:block;width:100%;background:#fff;color:#1b1c20;border:none;border-radius:9px;padding:9px 10px;font:15.5px/1.6 'David Libre',serif;resize:vertical;min-height:68px}
+#ppPick .pkact{display:flex;gap:5px;margin-top:8px}
+#ppPick .pkact button{flex:1;min-width:0;background:#2e3138;border:1px solid #43464f;color:#d7d2c8;border-radius:9px;padding:6px 2px 5px;font-size:10.5px;font-weight:400;line-height:1.25}
+#ppPick .pkact button i{display:block;font-style:normal;font-size:16px;line-height:1.2}
+#ppPick .pkact button.on{border-color:var(--wine);color:#fff;background:#3a2228}
+#ppPick .pkact button.dng{color:#f0bdb6}
+#ppPick .pkact button.ok{background:var(--wine);border-color:var(--wine);color:#fff;font-weight:600}
+#ppPick .pksub{display:flex;gap:6px;margin-top:8px}
+#ppPick .pksub button{flex:1;background:#2e3138;border:1px solid #43464f;color:#e8e4da;font-weight:400;font-size:13px;padding:10px 6px}
+
 #ppPick .pko{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 #ppPick .pko button{background:#2e3138;border:1px solid #43464f;border-radius:8px;padding:9px 6px;height:38px;
   color:#d7d2c8;display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:400;font-size:11.5px;flex:none}
@@ -269,7 +286,7 @@ body.home #app{visibility:hidden}
 .qgo[disabled]{opacity:.45}
 .qsec{font-family:'Frank Ruhl Libre',serif;font-size:15px;color:#fff;margin:16px 0 7px}
 .qsec small{font-family:'Assistant',sans-serif;font-size:12px;font-weight:400;color:#8f8a80;margin-inline-start:6px}
-#qName,#qInfo{width:100%;background:#fff;border:none;border-radius:9px;padding:12px;font-size:16px;font-family:inherit;color:#1b1c20}
+#qName,#qInfo,#qFoot{width:100%;resize:vertical;background:#fff;border:none;border-radius:9px;padding:12px;font-size:16px;font-family:inherit;color:#1b1c20}
 .qtypes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .qtypes button{background:#23262d;border:1.5px solid #3a3e47;border-radius:11px;padding:9px 8px 10px;color:#e8e4da;
   font-size:14px;font-weight:700;font-family:inherit;text-align:center;line-height:1.35}
@@ -1293,6 +1310,8 @@ body.canvas #scroller{padding-bottom:58dvh}
     <div id="qInfoWrap">
       <div class="qsec">שורת פרטים <small>לא חובה</small></div>
       <input type="text" id="qInfo" placeholder="פרשת וירא · גיליון 12 · י״ח בחשוון תשפ״ז">
+      <div class="qsec">פרטים בתחתית העמוד האחרון <small>לא חובה</small></div>
+      <textarea id="qFoot" rows="2" placeholder="להקדשות ולקבלת העלון: 050-0000000&#10;נא לשמור על קדושת הגיליון"></textarea>
     </div>
     <div class="qsec">צבע</div>
     <div class="qpal" id="qPal"></div>
@@ -1306,6 +1325,7 @@ body.canvas #scroller{padding-bottom:58dvh}
   <div class="qbar"><button id="mBack">→ חזרה</button><b>דגמי עלונים</b></div>
   <div class="qbody" style="max-width:900px">
     <div class="qhint">כל דגם מוצג עם טקסט לדוגמה. <b>לוחצים על דגם כדי לדפדף בו</b> ולראות את כל העמודים. כשבוחרים — מלבישים עליו את הטקסט שלך.</div>
+    <div class="ppseg" id="mdlSize" style="margin:0 0 12px"></div>
     <div id="mdlGrid"></div>
   </div>
 </div>
@@ -1353,7 +1373,7 @@ body.canvas #scroller{padding-bottom:58dvh}
 
 <div class="modal" id="help">
   <div class="sheetbox">
-    <h2>מדריך עבודה <span style="font-size:12px;font-weight:400;color:var(--muted)">· גרסה 7.0</span></h2>
+    <h2>מדריך עבודה <span style="font-size:12px;font-weight:400;color:var(--muted)">· גרסה 7.2</span></h2>
 
     <p style="background:var(--wine-soft);padding:9px 11px;border-radius:6px"><b>בקצרה:</b> בחר פורמט ← הכנס טקסט ← בחר צבע ← תצוגת הדפסה ← הדפסה. כל השאר הוא ליטוש.</p>
 
@@ -1538,7 +1558,7 @@ const DEF={
   lnOn:false, lnEvery:5, lnReset:"page", lnSide:"outer",
   out:"pages", mirrorBack:false, sides:"all", sigSize:0, creep:0,
   duplex:"auto", flipB:false, revB:true,
-  qd:null, qdLead:"", qdDeck:"", qdToc:[], qdInfo:"", colBal:false,
+  qd:null, qdLead:"", qdDeck:"", qdToc:[], qdInfo:"", qdFoot:"", colBal:false,
   uiMode:"simple", tab:"p-text", simplePick:"", lookPick:"plain", palette:"bw",
   colText:"#000000", colH1:"#000000", colH2:"#000000", colH3:"#000000",
   colRule:"#222222", colRun:"#000000", colQuote:"#999999", colFrame:"#000000",
@@ -1891,7 +1911,7 @@ function wrapMarks(pageEl,g){
   const off=g.b+g.zone;
   if(g.b>0){
     const bl=document.createElement("div");
-    bl.style.cssText=`position:absolute;background:#fff;left:${g.zone}mm;top:${g.zone}mm;width:${g.w+2*g.b}mm;height:${g.h+2*g.b}mm`;
+    bl.style.cssText=`position:absolute;background:${CFG.bgOn?(CFG.colBg||"#fff"):"#fff"};left:${g.zone}mm;top:${g.zone}mm;width:${g.w+2*g.b}mm;height:${g.h+2*g.b}mm`;
     s.appendChild(bl);
   }
   pageEl.style.position="absolute";
@@ -2264,9 +2284,17 @@ function paginate(blocks){
       tries++;
     }
     let r=best.r;
+    /* פס הפרטים של העמוד האחרון: שומרים לו מקום, ואם אין — הוא יורד לעמוד הבא */
+    const coloH=(CFG.qdFoot&&String(CFG.qdFoot).trim())?qdColoH():0;
+    let coloOK=false;
+    if(coloH&&!r.remaining.length){
+      const t0=fillPage(q,pages.length,fn,r.page.dbgReserve||0,r.page.boxes[0].clientHeight-coloH);
+      if(t0.remaining.length&&t0.remaining.length<q.length){ r.page.el.remove(); t0.page.boxes.forEach(b=>{ b.style.maxHeight=""; b.style.height=""; }); r=t0; }
+      else { t0.page.el.remove(); coloOK=!t0.remaining.length; }
+    }
     /* איזון טורים בעמוד האחרון: מחפשים את הגובה הנמוך ביותר שבו הכול עדיין נכנס */
     if(CFG.colBal&&+CFG.cols>1&&!r.remaining.length&&r.page.endReason!=="pb"){
-      const full=r.page.boxes[0].clientHeight;
+      const full=r.page.boxes[0].clientHeight-(coloOK?coloH:0);
       let used=0; r.page.boxes.forEach(b=>{ const l=b.lastElementChild; if(l)used+=l.offsetTop+l.offsetHeight; });
       let lo=Math.max(40,used/(+CFG.cols)), hi=full, win=null;
       if(lo<hi*0.93){
@@ -2278,6 +2306,15 @@ function paginate(blocks){
         }
         if(win){ r.page.el.remove(); win.page.boxes.forEach(b=>{ b.style.maxHeight=""; b.style.height=""; }); r=win; }
       }
+    }
+    if(coloOK&&!r.remaining.length){
+      const bd=r.page.el.querySelector(".page-body"), ft=r.page.el.querySelector(".runfoot");
+      if(bd)bd.insertBefore(qdColoEl(),ft&&ft.parentNode===bd?ft:null);
+    }
+    if(!r.remaining.length){
+      const fh=r.page.boxes[0].clientHeight||1; let mxb=0;
+      r.page.boxes.forEach(b=>{ const l=b.lastElementChild; if(l)mxb=Math.max(mxb,l.offsetTop+l.offsetHeight); });
+      r.page.fillFrac=Math.min(1,mxb/fh);
     }
     r.page.fnArea.style.minHeight="";   // ההערות יורדות לתחתית, בלי רווח מלאכותי
     pages.push(r.page); q=r.remaining; fn=r.fnEnd;
@@ -2457,7 +2494,7 @@ function render(){
     const lab=document.createElement("div"); lab.className="plabel";
     lab.textContent=p.special?"—":"עמוד "+pageLabel(CFG.pnStart+p.contentIndex,total);
     w.appendChild(lab);
-    if(g.on){ p.el.style.position="absolute"; w.appendChild(wrapMarks(p.el,g)); }
+    if(g.on){ p.el.style.position="absolute"; if(g.b>0)p.el.style.overflow="visible"; w.appendChild(wrapMarks(p.el,g)); }
     else { p.el.style.position="relative"; p.el.style.left=""; p.el.style.top=""; w.appendChild(p.el); }
     prev.appendChild(w);
     if(!p.special){
@@ -3014,6 +3051,24 @@ function mastCornerSVG(){
 function mastPatternCSS(c){
   return "background-image:repeating-linear-gradient(135deg,"+c+" 0 6px,transparent 6px 16px);";
 }
+function qdColoEl(){
+  const F=CFG.fsize, c1=CFG.colH1||"#222", c2=CFG.colH2||"#444", ac=(typeof CFG.colRule==="string"&&CFG.colRule)||"#888";
+  const E=t=>String(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  const L=String(CFG.qdFoot||"").split(/\n/).map(x=>x.trim()).filter(Boolean);
+  const el=document.createElement("div"); el.className="qcolo";
+  el.style.cssText="flex:none;margin-top:"+(F*0.9)+"pt;text-align:center;print-color-adjust:exact;-webkit-print-color-adjust:exact";
+  el.innerHTML='<div style="color:'+ac+';width:56%;margin:0 auto '+(F*0.3)+'pt">'+ruleHTML(CFG.ornDiv||"flourish")+'</div>'+
+    '<div style="print-color-adjust:exact;-webkit-print-color-adjust:exact;background:'+qTint(c2,11)+';border-top:1.4pt solid '+ac+';border-bottom:.5pt solid '+ac+';'+
+    'padding:'+(F*0.4)+'pt '+(F*0.8)+'pt;font-family:\'Assistant\',sans-serif;line-height:1.5;color:'+c1+'">'+
+    L.map((x,i)=>'<div style="font-size:'+(F*(i?0.82:0.95))+'pt;font-weight:'+(i?400:700)+'">'+E(x)+'</div>').join("")+'</div>';
+  return el;
+}
+function qdColoH(){
+  const d=pageDims(), w=d.w-(+CFG.mIn)-(+CFG.mOut);
+  const wrap=document.createElement("div"); wrap.style.cssText="position:absolute;visibility:hidden;width:"+w+"mm;font-size:"+CFG.fsize+"pt";
+  const e=qdColoEl(); wrap.appendChild(e); measure.appendChild(wrap);
+  const h=e.offsetHeight+CFG.fsize*0.9*96/72+2; wrap.remove(); return h;
+}
 function qdMast(mast){
   const D=CFG.qd, F=CFG.fsize, E=t=>String(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
   const bg=CFG.colMast||"#222", tx=CFG.colMastTx||"#fff", c1=CFG.colH1||"#000", c2=CFG.colH2||"#333", ac=CFG.colRule||"#888";
@@ -3030,8 +3085,11 @@ function qdMast(mast){
     const lightTx=D.imgDark!==false;
     const mT=+CFG.mTop, mI=+CFG.mIn, mO=+CFG.mOut;
     const fullW=d.w*2.835, bh=fullW*(D.imgRatio||0.36);
+    /* בבית דפוס השער גולש 3 מ״מ מעבר לקו החיתוך, כדי שלא יישאר פס לבן אחרי החיתוך */
+    const BL=(CFG.pressMode&&CFG.out==="pages")?(+CFG.bleed||0):0;
     mast.style.marginTop=(-mT)+"mm"; mast.style.marginInline=(-mI)+"mm "+(-mO)+"mm"; mast.style.width="auto";
-    h+='<div style="'+ex+'position:relative;height:'+bh+'pt;background:#222 url('+bImg+') center/cover no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
+    h+='<div style="'+ex+'position:relative;height:calc('+bh+'pt + '+BL+'mm);margin:'+(-BL)+'mm '+(-BL)+'mm 0;padding-top:'+BL+'mm;box-sizing:border-box;'+
+       'background:#222 url('+bImg+') center/cover no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
        '<div style="'+TF+'color:'+(lightTx?"#fff":c1)+';font-size:'+Math.min(F*7,(fullW*0.5)/Math.max(3,name.length)/0.56)+'pt;'+
        'text-shadow:'+(lightTx?"0 1.5pt 3pt rgba(0,0,0,.65),0 0 14pt rgba(0,0,0,.45)":"0 1pt 2pt rgba(255,255,255,.8)")+'">'+E(name)+'</div>'+
        (info?'<div style="'+ex+'position:absolute;inset-inline:0;bottom:0;background:rgba(0,0,0,.42);color:#fff;text-align:center;'+
@@ -3466,7 +3524,7 @@ function homeRender(){
 function setCurWork(n){
   CURWORK=n||"";
   const el=$("#curWork");
-  if(el)el.textContent=CURWORK?CURWORK:"עימוד חוברות · 7.0";
+  if(el)el.textContent=CURWORK?CURWORK:"עימוד חוברות · 7.2";
   const wn=$("#workName"); if(wn)wn.value=CURWORK;
 }
 function newWorkAs(n,over){
@@ -4906,7 +4964,7 @@ async function qDocx(buf){
 /* האם שורה היא כותרת של מדור */
 function qGuess(L,i){
   const x=L[i], t=x.t; if(!t)return false;
-  if(/^\[תמונה:/.test(t))return false;
+  if(/^(\[תמונה:|\[עמוד|\*\*\*|---)/.test(t))return false;
   if(x.h==="H")return true;
   const words=t.split(" ").length;
   if(t.length>64||words>10)return false;
@@ -4931,7 +4989,7 @@ function qIsHead(i){
 }
 function qAnalyze(){
   const L=QK.lines;
-  L.forEach((x,i)=>{ x._g=qGuess(L,i); x._c=x._g||(!!x.t&&!/^\[תמונה:/.test(x.t)&&x.t.length<=64&&!/[.,;]$/.test(x.t)&&(i===0||!L[i-1].t)); });
+  L.forEach((x,i)=>{ x._g=qGuess(L,i); x._c=x._g||(!!x.t&&!/^(\[תמונה:|\[עמוד|\*\*\*|---)/.test(x.t)&&x.t.length<=64&&!/[.,;]$/.test(x.t)&&(i===0||!L[i-1].t)); });
 }
 /* פירוק למדורים: {title, body[]} + שם המסמך אם יש */
 function qSections(){
@@ -5060,9 +5118,9 @@ function qOpen(edit){
   QK.edit=!!edit;
   if(edit&&CFG.qk){ $("#qText").value=CFG.qk.raw||""; QK.type=CFG.qk.type||"alon"; QK.pal=CFG.palette||"wine";
     QK.yes=Object.assign({},CFG.qk.yes||{}); QK.no=Object.assign({},CFG.qk.no||{}); QK.lines=CFG.qk.lines||[];
-    QK.design=CFG.qk.design||"classic"; $("#qInfo").value=CFG.qdInfo||"";
+    QK.design=CFG.qk.design||"classic"; $("#qInfo").value=CFG.qdInfo||""; $("#qFoot").value=CFG.qdFoot||"";
     QK.banner=IMG.qkban||null; QK.banDark=!(CFG.qd&&CFG.qd.imgDark===false); QK.banRatio=(CFG.qd&&CFG.qd.imgRatio)||0.36; }
-  else { $("#qText").value=""; QK.yes={}; QK.no={}; QK.lines=[]; QK.type="alon"; QK.design="headline"; QK.pal="orange"; QK.banner=null; $("#qInfo").value=""; $("#qName").value=""; }
+  else { $("#qText").value=""; QK.yes={}; QK.no={}; QK.lines=[]; QK.type="alon"; QK.design="headline"; QK.pal="orange"; QK.banner=null; $("#qInfo").value=""; $("#qFoot").value=""; $("#qName").value=""; }
   QK.fromFile=!!(edit&&CFG.qk&&CFG.qk.fromFile);
   $("#qStep1").style.display=""; $("#qStep2").style.display="none";
   $("#qTitle").textContent=edit?"עריכת הטקסט":"כתיבה חופשית";
@@ -5132,6 +5190,7 @@ function qBuild(type,name){
     cfg.qdLead=LEAD?secs[0].title:""; cfg.qdDeck=DECK;
     cfg.qdToc=secs.slice(LEAD?1:0).map(x=>x.title).filter(Boolean);
     cfg.qdInfo=($("#qInfo").value||"").trim();
+    cfg.qdFoot=($("#qFoot").value||"").trim();
     if(!DS.qd&&cfg.qdInfo)cfg.mastSub=cfg.qdInfo; else if(!DS.qd)cfg.mastSub="";
     cfg.colBal=true;
     if(QK.banner){
@@ -5268,37 +5327,87 @@ const MODELS=[
  {k:"green",n:"פסי צבע",s:"שני טורים בירוק",d:"classic",pal:"green"},
  {k:"press",n:"עיתון",s:"שחור־לבן, שלושה טורים",d:"press",pal:"bw"}
 ];
-const MDL={snap:null,img:null,busy:false,stop:false,cur:null,page:0};
+const MDL={snap:null,img:null,busy:false,stop:false,cur:null,page:0,size:4};
+MODELS.forEach(m=>m.cache={});
+const mdlC=m=>m.cache[MDL.size];
 function mdlBanner(m){ if(!m.ban)return null; if(m.ban==="gold")return BAN_GOLD;
   return svgURL(BANSVG[m.ban](PALETTES.find(x=>x.k===m.pal).c)); }
-const MDL_TEXT=(()=>{
+const MDL_ILL={
+  candles(c){ const fl=(x)=>'<ellipse cx="'+x+'" cy="150" rx="46" ry="60" fill="#ffd97a" opacity=".28"/><path d="M'+x+' 108c16 22 16 44 0 58c-16-14-16-36 0-58z" fill="#ffc94a"/>'+
+      '<path d="M'+x+' 128c7 11 7 22 0 30c-7-8-7-19 0-30z" fill="#fff6d0"/><rect x="'+(x-13)+'" y="166" width="26" height="150" rx="4" fill="#f6efe0"/>'+
+      '<rect x="'+(x-34)+'" y="312" width="68" height="14" rx="5" fill="#d9b25c"/><path d="M'+(x-22)+' 326h44l10 44h-64z" fill="#c79a3e"/>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><defs><radialGradient id="g" cx="50%" cy="35%" r="80%"><stop offset="0" stop-color="'+c.colRule+'"/>'+
+      '<stop offset="1" stop-color="#16101c"/></radialGradient></defs><rect width="600" height="400" fill="url(#g)"/>'+fl(230)+fl(370)+'<rect y="370" width="600" height="30" fill="#0d0a12" opacity=".5"/></svg>'; },
+  hills(c){ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3f2"/>'+
+      '<stop offset="1" stop-color="#fff1cf"/></linearGradient></defs><rect width="600" height="400" fill="url(#g)"/><circle cx="430" cy="150" r="70" fill="#ffe08a" opacity=".5"/>'+
+      '<circle cx="430" cy="150" r="46" fill="#ffd257"/><path d="M0 260C120 190 220 230 330 250S520 200 600 240V400H0z" fill="'+c.colRule+'" opacity=".55"/>'+
+      '<path d="M0 300C140 250 260 300 380 290S540 270 600 300V400H0z" fill="'+c.colMast+'" opacity=".75"/><path d="M0 350C160 320 300 350 600 330V400H0z" fill="'+c.colMast+'"/>'+
+      '<g fill="'+c.colMast+'"><rect x="118" y="212" width="6" height="40"/><ellipse cx="121" cy="205" rx="16" ry="26"/><rect x="165" y="225" width="5" height="30"/><ellipse cx="167" cy="219" rx="12" ry="20"/></g></svg>'; },
+  book(c){ let r=""; for(let i=0;i<13;i++){ const a=(-150+i*10)*Math.PI/180; r+='<path d="M300 250L'+(300+420*Math.cos(a))+' '+(250+420*Math.sin(a))+'" stroke="#fff" stroke-width="9" opacity=".12"/>'; }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+c.colMast+'"/>'+
+      '<stop offset="1" stop-color="'+c.colRule+'"/></linearGradient></defs><rect width="600" height="400" fill="url(#g)"/>'+r+
+      '<path d="M300 170C240 140 170 140 110 160V320C170 300 240 300 300 330z" fill="#fbf4e2"/><path d="M300 170C360 140 430 140 490 160V320C430 300 360 300 300 330z" fill="#f3e9cf"/>'+
+      '<g stroke="#b9a98a" stroke-width="3">'+[0,1,2,3,4].map(i=>'<path d="M140 '+(190+i*22)+'q70 -14 136 6M324 '+(196+i*22)+'q66 -20 136 -6"/>').join("")+'</g>'+
+      '<path d="M300 170V330" stroke="#8d7b56" stroke-width="3"/></svg>'; }
+};
+const MDL_SIZES=[{n:2,t:"דף אחד",d:"A4 דו־צדדי"},{n:4,t:"4 עמודים",d:"A3 מקופל"},{n:8,t:"8 עמודים",d:"שני דפי A3"}];
+function mdlText(f,N,cols){
   const S=["יסוד גדול הוא שכל אדם צריך לחפש את הנקודה הטובה שבו ולשמוח בה תמיד","ומתוך כך הוא זוכה להתחזק ולהתחיל בכל פעם מחדש בלי להביט לאחור",
    "כי העיקר הוא הרצון והכיסופים, והשם יתברך מצרף כל מחשבה טובה למעשה","וכשמגיעה השבת נפתחים שערי האור והלב מתמלא שמחה ושלווה גדולה",
    "מסופר על חסיד אחד שהלך בדרך רחוקה ולא התייאש אף שהדרך הייתה קשה מאוד","ובכל בוקר היה אומר לעצמו שהיום הוא יום חדש ואין לו אלא מה שלפניו",
    "חכמינו לימדו שמעט אור דוחה הרבה מן החושך, וכך גם מעשה קטן של חסד","לכן יתאמץ כל אחד לומר מילה טובה לחברו ולהאיר לו פנים בכל עת"];
   const para=(k,n)=>{ let o=[]; for(let i=0;i<n;i++)o.push(S[(k*3+i*5+i*i)%S.length]); return o.join(". ")+"."; };
-  const body=(k,n)=>{ let o=[]; for(let i=0;i<n;i++)o.push(para(k+i,3+((k+i)%3))); return o.join("\n"); };
-  return "אור השבת\n\nאור גדול בתוך החושך\nדווקא ברגעים הקשים מתגלה הכוח להתחיל מחדש, ומי שמחפש את הטוב מוצא אותו\n"+body(1,12)+
-   "\n\nחיזוק לשבוע\n"+body(3,7)+"\n\nסיפור לשבת\n"+body(5,10)+"\n\nפינת ההלכה\n"+para(2,2)+"\n"+para(6,2)+
-   "\n\nמשנת הצדיקים\n"+body(4,8)+"\n\nלילדים\n"+para(7,3)+"\n\nפנינים\n"+para(1,2)+"\n"+para(3,2)+"\n\nעל הפרשה\n"+body(6,9)+
-   "\n\nמזל טוב\n"+para(5,2)+"\n";
-})();
-function mdlRenderOne(m){
-  QK.lines=qFromText(MDL_TEXT); QK.yes={}; QK.no={}; QK.fromFile=true; QK.type="alon"; QK.design=m.d; QK.pal=m.pal;
+  const body=(k,n)=>{ n=Math.max(2,Math.round(n*f)); let o=[]; for(let i=0;i<n;i++)o.push(para(k+i,3+((k+i)%3))); return o; };
+  const img=(id,full)=>"[תמונה:"+id+"|"+(full?(cols>=3?30:42):34)+"|cover|"+(full?"":"|w")+"]";
+  let secs=[["חיזוק לשבוע",7],["סיפור לשבת",10,"mdl2"],["פינת ההלכה",0],["משנת הצדיקים",8],["לילדים",0],["פנינים",0],["על הפרשה",9],["מזל טוב",0]];
+  if(N<=2)secs=[["חיזוק לשבוע",6],["פינת ההלכה",0],["סיפור לשבת",8,"mdl2"],["לילדים",0],["מזל טוב",0]];
+  if(N>=8)secs=secs.slice(0,7).concat([["שאלה ותשובה",6],["מעשה רב",9,"mdl3"],["הלכה למעשה",0],["אמונה וביטחון",8],["מכתבים למערכת",0],["דבר העורך",6],["שיחת חברים",7],["לוח השבוע",0],["מזל טוב",0]]);
+  const lead=body(1,N<=2?8:12);
+  lead.splice(Math.min(2,lead.length),0,img("mdl1",cols>=3));
+  let t="אור השבת\n\nאור גדול בתוך החושך\nדווקא ברגעים הקשים מתגלה הכוח להתחיל מחדש, ומי שמחפש את הטוב מוצא אותו\n"+lead.join("\n");
+  secs.forEach((x,i)=>{
+    t+="\n\n"+x[0]+"\n";
+    if(!x[1]){ t+=para(i+2,2)+"\n"+para(i+5,2); return; }
+    const b=body(i+3,x[1]); if(x[2])b.splice(1,0,img(x[2],true)); t+=b.join("\n");
+  });
+  return t+"\n";
+}
+function mdlBuild(m,f,N){
+  const D=Q_DESIGNS.find(x=>x.k===m.d), cols=(D&&D.cfg.cols)||2;
+  QK.lines=qFromText(mdlText(f,N,cols)); QK.yes={}; QK.no={}; QK.fromFile=true; QK.type="alon"; QK.design=m.d; QK.pal=m.pal;
   QK.banner=mdlBanner(m); QK.banDark=true; QK.banRatio=0.34;
   qAnalyze(); $("#qInfo").value="פרשת וירא · גיליון 12 · י״ח בחשוון תשפ״ז";
+  $("#qFoot").value="להקדשות ולקבלת העלון: 050-0000000 · alon@example.co.il\nנא לשמור על קדושת הגיליון · אין לקרוא בשעת התפילה";
   const {txt,cfg}=qBuild("alon","אור השבת");
   CFG=Object.assign(JSON.parse(JSON.stringify(DEF)),cfg);
   const pl=PALETTES.find(x=>x.k===m.pal); Object.assign(CFG,JSON.parse(JSON.stringify(pl.c))); CFG.palette=m.pal;
   if(QK.banner)IMG.qkban=QK.banner; else delete IMG.qkban;
+  IMG.mdl1=svgURL(MDL_ILL.candles(pl.c)); IMG.mdl2=svgURL(MDL_ILL.hills(pl.c)); IMG.mdl3=svgURL(MDL_ILL.book(pl.c));
   FLOATS=[]; SECTIONS=[]; $("#src").value=txt; BLOCKS=textToBlocks(txt);
   render();
-  m.pages=ALL.map(p=>p.el.outerHTML); m.pw=pageDims().w*96/25.4; m.ph=pageDims().h*96/25.4;
+  const last=ALL[ALL.length-1];
+  return {n:ALL.length,fill:(last&&last.fillFrac)||0.5};
+}
+function mdlRenderOne(m){
+  const N=MDL.size, key=m.k+"_"+N;
+  let fit={}; try{ fit=JSON.parse(localStorage.getItem("sadar_fit")||"{}"); }catch(e){}
+  let f=fit[key]||({2:0.5,4:1,8:1.05}[N]), r=mdlBuild(m,f,N), tries=0;
+  /* מכוונים את כמות הטקסט עד שהעלון ממלא בדיוק את מספר העמודים, עד הסוף */
+  while(tries<7&&!(r.n===N&&r.fill>=0.86)){
+    const total=(r.n-1)+r.fill, target=N-0.05;
+    let nf=f*(1+(target/total-1)*0.9);
+    if(r.n>N)nf=Math.min(nf,f*0.96);
+    if(Math.abs(nf-f)<0.004)break;
+    f=nf; r=mdlBuild(m,f,N); tries++;
+  }
+  while(r.n>N&&tries<12){ f*=0.96; r=mdlBuild(m,f,N); tries++; }
+  fit[key]=f; try{ localStorage.setItem("sadar_fit",JSON.stringify(fit)); }catch(e){}
+  m.cache[N]={pages:ALL.map(p=>p.el.outerHTML),pw:pageDims().w*96/25.4,ph:pageDims().h*96/25.4};
 }
 function mdlThumb(m){
-  const c=$('#mdlGrid [data-mk="'+m.k+'"] .mth'); if(!c||!m.pages)return;
-  const sc=c.clientWidth/m.pw;
-  c.innerHTML='<div class="mpg" style="width:'+m.pw+'px;height:'+m.ph+'px;transform:scale('+sc+')">'+m.pages[0]+'</div>';
+  const c=$('#mdlGrid [data-mk="'+m.k+'"] .mth'), k=mdlC(m); if(!c||!k)return;
+  const sc=c.clientWidth/k.pw;
+  c.innerHTML='<div class="mpg" style="width:'+k.pw+'px;height:'+k.ph+'px;transform:scale('+sc+')">'+k.pages[0]+'</div>';
 }
 function mdlBegin(){
   if(MDL.snap)return;
@@ -5315,16 +5424,17 @@ function mdlQueue(){
   if(MDL.busy)return; MDL.busy=true; MDL.stop=false;
   const step=()=>{
     if(MDL.stop||!$("#models").classList.contains("on")){ MDL.busy=false; return; }
-    const m=MODELS.find(x=>!x.pages);
+    const m=MODELS.find(x=>!mdlC(x));
     if(!m){ MDL.busy=false; mdlRestore(); MDL.stop=false; return; }
     mdlBegin();
-    try{ mdlRenderOne(m); }catch(e){ m.pages=[]; }
+    try{ mdlRenderOne(m); }catch(e){ m.cache[MDL.size]={pages:[],pw:794,ph:1123}; }
     mdlThumb(m);
     setTimeout(step,30);
   };
   setTimeout(step,60);
 }
 function mdlOpen(){
+  $("#mdlSize").innerHTML=MDL_SIZES.map(z=>'<button data-ms="'+z.n+'" class="'+(MDL.size===z.n?"on":"")+'">'+z.t+'<br><small style="font-weight:400;opacity:.8">'+z.d+'</small></button>').join("");
   $("#mdlGrid").innerHTML=MODELS.map(m=>'<button class="mcard" data-mk="'+m.k+'"><div class="mth"><div class="mwait">מכין את הדגם…</div></div>'+m.n+'<small>'+m.s+'</small></button>').join("");
   $("#models").classList.add("on");
   MODELS.forEach(mdlThumb);
@@ -5333,7 +5443,8 @@ function mdlOpen(){
 function mdlClose(){ $("#models").classList.remove("on"); mdlRestore(); }
 /* דפדוף */
 function flipOpen(m){
-  if(!m.pages||!m.pages.length)return;
+  const k0=mdlC(m); if(!k0||!k0.pages.length)return;
+  m.pages=k0.pages; m.pw=k0.pw; m.ph=k0.ph;
   MDL.cur=m; MDL.page=0;
   $("#fTitle").textContent=m.n;
   $("#flip").classList.add("on");
@@ -5366,7 +5477,10 @@ function flipGo(d){ const n=MDL.leaves; MDL.page=Math.max(0,Math.min(n,MDL.page+
 $("#homeModels").onclick=mdlOpen;
 $("#mBack").onclick=mdlClose;
 $("#mdlGrid").addEventListener("click",e=>{ const b=e.target.closest("[data-mk]"); if(!b)return;
-  const m=MODELS.find(x=>x.k===b.dataset.mk); if(m&&m.pages&&m.pages.length)flipOpen(m); });
+  const m=MODELS.find(x=>x.k===b.dataset.mk); if(m)flipOpen(m); });
+$("#mdlSize").addEventListener("click",e=>{ const b=e.target.closest("[data-ms]"); if(!b)return;
+  MDL.size=+b.dataset.ms; MDL.stop=true;
+  setTimeout(()=>{ MDL.busy=false; mdlOpen(); },80); });
 $("#fBack").onclick=()=>$("#flip").classList.remove("on");
 $("#fNext").onclick=()=>flipGo(1);
 $("#fPrev").onclick=()=>flipGo(-1);
@@ -5612,8 +5726,15 @@ $("#ppPages").addEventListener("click",e=>{
   ppPickBar(); ppMarkSel();
 });
 /* ===== לוח «הדפסה בבית» בתוך התצוגה המקדימה ===== */
+var ppHomeOpen=false;
 function ppHomeRender(g,warn){
   const host=$("#ppHome"); if(!host)return;
+  if(!ppHomeOpen&&!(ppRead&&CFG.out!=="pages")){
+    host.innerHTML='<button id="ppHomeTg" class="pphtg">🖨 הוראות הדפסה, דו־צדדי ובית דפוס ⌄</button>'+
+      '<div class="pphint">לחיצה על כל קטע בעלון פותחת אותו לעריכה</div>';
+    $("#ppHomeTg").onclick=()=>{ ppHomeOpen=true; ppRender(); };
+    return;
+  }
   const folded=CFG.out!=="pages";
   const sheets=g.count;
   const dup=CFG.duplex||"auto";
@@ -5698,6 +5819,16 @@ function ppHomeRender(g,warn){
     }
   }
 
+  if(!folded){
+    const on=!!CFG.pressMode;
+    h+='<div class="ppcard"><h5>שליחה לבית דפוס</h5>'+
+      (on?'מצב בית דפוס <b>פועל</b>: לכל עמוד נוספו 3 מ״מ גלישה מעבר לקו החיתוך וסימני חיתוך בפינות.'
+         :'בית דפוס צריך קובץ PDF עם <b>גלישה של 3 מ״מ</b> וסימני חיתוך. לחיצה אחת מכינה את זה.')+
+      '<div class="ppbtns"><button id="ppPress" class="'+(on?"alt":"")+'">'+(on?"חזרה להדפסה ביתית":"הכנה לבית דפוס")+'</button></div>'+
+      (on?'<ol><li>לוחצים «הדפסה» ובוחרים במדפסת: <b>שמירה כ־PDF</b>.</li><li>שוליים: <b>ללא</b> · קנה מידה: <b>100%</b> · לסמן «גרפיקת רקע».</li>'+
+        '<li>שולחים את הקובץ ומבקשים: <b>חיתוך לפי הסימנים</b>, והמרה ל־<b>CMYK</b> עם טקסט בשחור נקי.</li></ol>':'')+
+      '</div>';
+  }
   const notes=[];
   if(warn)
     notes.push(warn+" עמודים נגמרו לפני הסוף — בדרך כלל בגלל מעבר עמוד כפוי. ב«עמוד ⌄» אפשר לאחד אותם עם הקודם.");
@@ -5706,7 +5837,8 @@ function ppHomeRender(g,warn){
   if(notes.length)
     h+='<div class="ppcard ppwarn"><h5>לפני שמדפיסים</h5>'+notes.map(n=>"<div>• "+n+"</div>").join("")+'</div>';
 
-  host.innerHTML=h; ppHomeBind();
+  host.innerHTML='<button id="ppHomeTg" class="pphtg">סגירת ההוראות ⌃</button>'+h; ppHomeBind();
+  $("#ppHomeTg").onclick=()=>{ ppHomeOpen=false; ppRender(); $(".ppscroll").scrollTop=0; };
 }
 /* ===== לחיצה על פסקה בתצוגה המקדימה — «להתחיל כאן עמוד חדש» ===== */
 let ppPick=null;
@@ -5717,54 +5849,157 @@ function srcSet(arr){
   if(CFG.editMode==="boxes"){ BLOCKS=textToBlocks(txt); if(typeof renderBuilder==="function")renderBuilder(); }
   $("#src").value=txt;
   if($("#simpleText"))$("#simpleText").value=txt;
+  try{ qkSyncFromMd(txt); }catch(e){}
   render(); save();
 }
+/* ===== עריכה ישירה מול העמוד: לוחצים על קטע, עורכים, והעמוד מתעדכן מיד ===== */
+const PPED={keep:false,tmr:null,undo:false,sub:""};
+const PP_PRE={p:"",h1:"# ",h2:"## ",h3:"### ",q:"> ",li:"- "};
+function ppLineType(l){
+  l=l||"";
+  if(/^\s*\[תמונה:/.test(l))return "img";
+  if(/^\s*\*\*\*+[a-z]*\s*$/.test(l)||/^\s*(-{3,}|_{3,})\s*$/.test(l))return "orn";
+  if(/^\s*\[עמוד/.test(l))return "pb";
+  if(/^###+\s+/.test(l))return "h3"; if(/^##\s+/.test(l))return "h2"; if(/^#\s+/.test(l))return "h1";
+  if(/^>\s?/.test(l))return "q"; if(/^[-•*]\s+/.test(l))return "li";
+  return "p";
+}
+function ppRange(A,ln){
+  let e=ln+1;
+  if(ppLineType(A[ln])==="p"&&!CFG.lineIsPara){ while(e<A.length&&A[e].trim()&&ppLineType(A[e])==="p")e++; }
+  return [ln,e];
+}
+function ppRun(A,i){ let s0=i,e=i+1; while(s0>0&&A[s0-1].trim())s0--; while(e<A.length&&A[e].trim())e++; return [s0,e]; }
+function qkSyncFromMd(txt){
+  /* אחרי עריכה ישירה, «✍️ טקסט» ימשיך מאותו מצב ולא מהטקסט הישן */
+  if(!CFG.qk)return;
+  const yes={},no={},out=[], T=CFG.qk.type, A=String(txt).split("\n");
+  if(CFG.qdLead){ out.push(CFG.qdLead); yes[CFG.qdLead]=1; if(CFG.qdDeck)out.push(CFG.qdDeck); }
+  A.forEach((l,i)=>{
+    const t=l.trim();
+    if(!t){ out.push(""); return; }
+    let nx=i+1; while(nx<A.length&&!A[nx].trim())nx++;
+    const nextHead=/^#{1,3}\s+/.test(A[nx]||"");
+    if(T==="book"&&/^\[עמוד/.test(t)&&nextHead)return;
+    if(T==="kuntres"&&t==="***"&&nextHead)return;
+    const m=t.match(/^#{1,3}\s+(.*)$/);
+    if(m){ out.push(m[1]); yes[m[1]]=1; return; }
+    out.push(t); if(t.length<=64&&!/^(\[|\*\*\*)/.test(t))no[t]=1;
+  });
+  CFG.qk.raw=out.join("\n").replace(/\n{3,}/g,"\n\n"); CFG.qk.yes=yes; CFG.qk.no=no; CFG.qk.lines=null; CFG.qk.fromFile=false;
+}
+function ppRefresh(){ const y=$(".ppscroll").scrollTop; ppRender(); $(".ppscroll").scrollTop=y; }
 function ppPickBar(){
   let bar=$("#ppPick");
-  if(!ppPick){ if(bar)bar.remove(); return; }
+  if(!ppPick){ if(bar)bar.remove(); PPED.undo=false; PPED.sub=""; const sc0=$(".ppscroll"); if(sc0)sc0.style.paddingBottom=""; return; }
+  if(bar&&PPED.keep&&bar.dataset.ln===String(ppPick.ln)){ PPED.keep=false; return; }
+  PPED.keep=false;
   if(!bar){ bar=document.createElement("div"); bar.id="ppPick"; $("#pp .ppbox").appendChild(bar); }
-  const L=srcLines(), ln=ppPick.ln;
+  const L=srcLines(), ln=ppPick.ln, ty=ppLineType(L[ln]);
+  bar.dataset.ln=String(ln);
   const isBrk=ln>0&&/^\s*\[עמוד(?: חדש)?\]\s*$/.test(L[ln-1]||"");
+  const isImg=ty==="img", isOrn=ty==="orn", isTxt=!isImg&&!isOrn&&ty!=="pb";
+  const ornLn=isOrn||(ln>0&&ppLineType(L[ln-1])==="orn");
+  const ornAt=isOrn?ln:ln-1;
+  const cur=ornLn?((L[ornAt].match(/[a-z]+/)||[""])[0]||"flourish"):"";
+  const [st,en]=ppRange(L,ln);
+  const plain=isTxt?L.slice(st,en).join(" ").replace(/^\s*(#{1,6}\s+|>\s?|[-•*]\s+)/,"").trim():"";
   const E=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const isImg=/^\s*\[תמונה:/.test(L[ln]||"");
-  const ornLn=ln>0&&/^\s*\*\*\*+[a-z]*\s*$/.test(L[ln-1]||"");
-  const cur=ornLn?((L[ln-1].match(/[a-z]+/)||[""])[0]||"flourish"):"";
-  bar.innerHTML='<div class="pkt">✏️ '+E(ppPick.txt)+'</div>'+
-    '<div class="pkb">'+
-      (isImg?'<button data-pk="delimg">🗑 הסרת התמונה</button>':'<button data-pk="brk">'+(isBrk?"ביטול — שיזרום עם הקודם":"להתחיל כאן עמוד חדש")+'</button>')+
-      '<button data-pk="x" class="alt">סגירה</button>'+
-    '</div>'+
-    (isImg?'':'<div class="pkb" style="margin-top:7px"><button data-pi="w" class="alt" style="flex:1">🖼 תמונה — הטקסט עוטף</button>'+
-      '<button data-pi="f" class="alt" style="flex:1">🖼 תמונה ברוחב הטור</button></div>')+
-    '<div class="pkl">✦ עיטור מפריד לפני הקטע:</div>'+
-    '<div class="pko">'+
+  let h="";
+  if(isTxt){
+    const tb=(k,t)=>'<button data-pt="'+k+'" class="'+(ty===k||(k==="p"&&ty==="li")?"on":"")+'">'+t+'</button>';
+    h+='<div class="pkty">'+tb("p","טקסט")+tb("h2","כותרת מדור")+tb("h3","כותרת קטנה")+tb("q","ציטוט")+
+       '<span style="flex:1"></span><button data-pf="b" style="font-weight:800">B</button><button data-pf="i" style="font-style:italic">I</button><button data-pf="u" style="text-decoration:underline">U</button></div>'+
+       '<textarea id="pkTxt" rows="3" dir="rtl">'+E(plain)+'</textarea>';
+  } else if(isImg){
+    const pt=L[ln].trim().slice(7,-1).split("|");
+    h+='<div class="pkt">🖼 תמונה · גובה '+(+pt[1]||45)+' מ״מ · '+(pt[4]==="w"?"הטקסט עוטף":"ברוחב הטור")+'</div>'+
+       '<div class="pkact"><button data-im="-">קטנה −</button><button data-im="+">גדולה +</button><button data-im="w">'+(pt[4]==="w"?"לרוחב הטור":"שהטקסט יעטוף")+'</button></div>';
+  } else h+='<div class="pkt">✦ '+(isOrn?"עיטור מפריד":"מעבר עמוד")+'</div>';
+  const ab=(attr,ic,t,cls)=>'<button '+attr+' class="'+(cls||"")+'" title="'+t+'"><i>'+ic+'</i>'+t+'</button>';
+  h+='<div class="pkact">'+
+     (isTxt?ab('data-ed="add"',"＋","פסקה"):"")+
+     (isTxt?ab('data-px="img"',"🖼","תמונה",PPED.sub==="img"?"on":""):"")+
+     ((isTxt||isOrn)?ab('data-px="orn"',"✦","עיטור",PPED.sub==="orn"||isOrn?"on":""):"")+
+     (isTxt?ab('data-pk="brk"',"⤓",isBrk?"בטל עמוד":"עמוד חדש",isBrk?"on":""):"")+
+     ab('data-ed="up"',"↑","למעלה")+ab('data-ed="down"',"↓","למטה")+
+     (isImg?ab('data-pk="delimg"',"🗑","מחיקה","dng"):ab('data-ed="del"',"🗑","מחיקה","dng"))+
+     ab('data-pk="x"',"✓","סיום","ok")+'</div>';
+  if(isTxt&&PPED.sub==="img")h+='<div class="pksub"><button data-pi="w">הטקסט עוטף את התמונה</button><button data-pi="f">תמונה ברוחב הטור</button></div>';
+  if(PPED.sub==="orn"||isOrn)h+='<div class="pko" style="margin-top:8px">'+
       PPORN.map(k=>'<button data-po="'+k+'" class="'+(cur===k?"on":"")+'">'+ruleHTML(k)+'</button>').join("")+
-      (ornLn?'<button data-po="" class="rm">✕ הסרה</button>':'')+
-    '</div>';
+      (ornLn&&!isOrn?'<button data-po="" class="rm">✕ הסרה</button>':'')+'</div>';
+  bar.innerHTML=h;
+  setTimeout(()=>{ const sc=$(".ppscroll"), b2=$("#ppPick"); if(!b2)return;
+    sc.style.paddingBottom=(b2.offsetHeight+40)+"px";
+    const el=$("#ppPages .pe-sel"); if(!el)return;
+    const r=el.getBoundingClientRect(), bt=b2.getBoundingClientRect().top, tp=sc.getBoundingClientRect().top;
+    if(r.bottom>bt-12)sc.scrollTop+=r.bottom-bt+28; else if(r.top<tp+6)sc.scrollTop-=tp+20-r.top;
+  },30);
+  const reselect=(n)=>{ ppPick=n==null?null:{ln:n,txt:""}; ppRefresh(); };
+  /* עריכת טקסט חיה */
+  const ta=$("#pkTxt",bar);
+  const commit=(newType)=>{
+    const A=srcLines(), [s0,e0]=ppRange(A,ln), t=ta.value.replace(/\s*\n+\s*/g," ").trim();
+    if(!t)return;
+    const kind=newType||ppLineType(A[ln]);
+    if(!PPED.undo){ pushUndo(); PPED.undo=true; }
+    A.splice(s0,e0-s0,(PP_PRE[kind]||"")+t);
+    srcSet(A);
+    if(newType){ PPED.keep=false; reselect(s0); } else { PPED.keep=true; ppRefresh(); }
+  };
+  if(ta){
+    ta.addEventListener("input",()=>{ clearTimeout(PPED.tmr); PPED.tmr=setTimeout(()=>commit(null),420); });
+    $$("[data-pt]",bar).forEach(b=>b.onclick=()=>{ clearTimeout(PPED.tmr); commit(b.dataset.pt); });
+    $$("[data-pf]",bar).forEach(b=>b.onclick=()=>{
+      const mk={b:"**",i:"*",u:"__"}[b.dataset.pf], a0=ta.selectionStart, a1=ta.selectionEnd;
+      if(a0===a1){ alert("סמן קודם את המילים בתוך התיבה, ואז לחץ על הכפתור."); return; }
+      ta.value=ta.value.slice(0,a0)+mk+ta.value.slice(a0,a1)+mk+ta.value.slice(a1);
+      clearTimeout(PPED.tmr); commit(null); ta.focus();
+    });
+  }
+  $$("[data-px]",bar).forEach(b=>b.onclick=()=>{ PPED.sub=PPED.sub===b.dataset.px?"":b.dataset.px; ppPickBar(); });
+  $$("[data-ed]",bar).forEach(b=>b.onclick=()=>{
+    clearTimeout(PPED.tmr);
+    const k=b.dataset.ed, A=srcLines(); pushUndo();
+    if(k==="add"){ const [,e0]=ppRange(A,ln); A.splice(e0,0,"","פסקה חדשה"); srcSet(A); PPED.sub=""; reselect(e0+1);
+      setTimeout(()=>{ const t2=$("#pkTxt"); if(t2){ t2.focus(); t2.select(); } },60); return; }
+    if(k==="del"){ const [s0,e0]=ppRange(A,ln); A.splice(s0,e0-s0); if(!(A[s0]||"").trim()&&!(A[s0-1]||"x").trim())A.splice(s0,1); srcSet(A); reselect(null); return; }
+    const [s0,e0]=ppRun(A,ln);
+    if(k==="up"){ let p1=s0-1; while(p1>=0&&!A[p1].trim())p1--; if(p1<0){ UNDO.pop(); refreshUndo(); return; }
+      const [ps]=ppRun(A,p1); const me=A.slice(s0,e0), mid=A.slice(p1+1,s0), pv=A.slice(ps,p1+1);
+      A.splice(ps,e0-ps,...me,...mid,...pv); srcSet(A); reselect(ps+(ln-s0)); return; }
+    if(k==="down"){ let n1=e0; while(n1<A.length&&!A[n1].trim())n1++; if(n1>=A.length){ UNDO.pop(); refreshUndo(); return; }
+      const [,ne]=ppRun(A,n1); const me=A.slice(s0,e0), mid=A.slice(e0,n1), nx=A.slice(n1,ne);
+      A.splice(s0,ne-s0,...nx,...mid,...me); srcSet(A); reselect(s0+nx.length+mid.length+(ln-s0)); return; }
+  });
+  $$("[data-im]",bar).forEach(b=>b.onclick=()=>{
+    const A=srcLines(), pt=A[ln].trim().slice(7,-1).split("|"); while(pt.length<5)pt.push("");
+    pushUndo();
+    if(b.dataset.im==="w")pt[4]=pt[4]==="w"?"":"w"; else pt[1]=String(Math.max(16,Math.min(140,(+pt[1]||45)+(b.dataset.im==="+"?8:-8))));
+    if(!pt[4])pt.length=4;
+    A[ln]="[תמונה:"+pt.join("|")+"]"; srcSet(A); reselect(ln);
+  });
   $$("[data-po]",bar).forEach(b=>b.onclick=()=>{
     pushUndo();
     const A=srcLines(), k=b.dataset.po;
     let d=0;
-    if(ornLn){ if(k)A[ln-1]="***"+k; else { A.splice(ln-1,1); d=-1; } }
+    if(isOrn){ A[ln]="***"+k; }
+    else if(ornLn){ if(k)A[ln-1]="***"+k; else { A.splice(ln-1,1); d=-1; } }
     else { A.splice(ln,0,"***"+k); d=1; }
     srcSet(A);
-    if(ppPick)ppPick.ln=ln+d;            /* הבחירה נשארת — אפשר להחליף עיטור שוב */
-    const y=$(".ppscroll").scrollTop; ppRender(); $(".ppscroll").scrollTop=y;
+    if(ppPick)ppPick.ln=ln+d;
+    ppRefresh();
   });
-  $$("[data-pi]",bar).forEach(b=>b.onclick=()=>{ PPIMG={ln,wrap:b.dataset.pi==="w"}; $("#ppImgPick").click(); });
+  $$("[data-pi]",bar).forEach(b=>b.onclick=()=>{ PPIMG={ln,wrap:b.dataset.pi==="w"}; PPED.sub=""; $("#ppImgPick").click(); });
   $$("[data-pk]",bar).forEach(b=>b.onclick=()=>{
+    clearTimeout(PPED.tmr);
     if(b.dataset.pk==="x"){ ppPick=null; ppPickBar(); ppMarkSel(); return; }
-    if(b.dataset.pk==="delimg"){
-      pushUndo(); const A0=srcLines(); const mk=(A0[ln]||"").trim(); A0.splice(ln,1); qkMirror("",mk,true); srcSet(A0);
-      ppPick=null; const y0=$(".ppscroll").scrollTop; ppRender(); $(".ppscroll").scrollTop=y0; return;
-    }
+    if(b.dataset.pk==="delimg"){ pushUndo(); const A0=srcLines(); A0.splice(ln,1); if(!(A0[ln]||"").trim())A0.splice(ln,1); srcSet(A0); reselect(null); return; }
     pushUndo();
     const A=srcLines();
-    if(isBrk)A.splice(ln-1,1);
-    else A.splice(ln,0,"[עמוד]");
-    srcSet(A);
-    ppPick=null;
-    const y=$(".ppscroll").scrollTop; ppRender(); $(".ppscroll").scrollTop=y;
+    if(isBrk){ A.splice(ln-1,1); srcSet(A); reselect(ln-1); }
+    else { A.splice(ln,0,"[עמוד]"); srcSet(A); reselect(ln+1); }
   });
 }
 function ppMarkSel(){
@@ -5778,6 +6013,8 @@ function ppHomeBind(){
   sg("ppSig",v=>{ pushUndo(); CFG.sigSize=+v; paint(); save();
     const y=$(".ppscroll").scrollTop; ppRender(); $(".ppscroll").scrollTop=y; });
   sg("ppView",v=>{ ppRead=v==="1"; ppRender(); });
+  const prs=$("#ppPress"); if(prs)prs.onclick=()=>{ pushUndo(); CFG.pressMode=!CFG.pressMode; if(CFG.pressMode){ CFG.cropOn=true; if(!+CFG.bleed)CFG.bleed=3; }
+    paint(); render(); save(); ZPP.z=null; ppRender(); };
   const rv=$("#ppRev"); if(rv)rv.onchange=()=>{ CFG.revB=rv.checked; save(); };
   const fl=$("#ppFlip"); if(fl)fl.onchange=()=>{ CFG.flipB=fl.checked; save(); };
   const a=$("#ppA"); if(a)a.onclick=()=>doPrint("A");
