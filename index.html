@@ -1280,7 +1280,9 @@ body.canvas #scroller{padding-bottom:58dvh}
     <button class="hnew" id="homeNew" style="background:#2e3138;border:1px solid #43464f;font-weight:400;font-size:14px;padding:11px">עבודה ריקה עם הגדרות ידניות</button>
     <div class="hsec" id="homeSec">העבודות שלי</div>
     <div id="homeList"></div>
-    <label class="hload" for="homeFile">פתיחת עבודה מקובץ</label>
+    <div style="display:flex;gap:8px"><button class="hload" id="homeBackup" style="flex:1;cursor:pointer;font-family:inherit">⬇ גיבוי כל העבודות</button>
+      <label class="hload" for="homeFile" style="flex:1">⬆ שחזור או פתיחה מקובץ</label></div>
+    <div id="homeBk" style="text-align:center;font-size:12px;color:#8f8a80;margin:6px 0 2px"></div>
     <input type="file" id="homeFile" accept=".json,application/json" style="display:none">
     <button class="hload" id="homeHelp" style="width:100%;margin-top:8px;cursor:pointer;font-family:inherit">איך עובדים עם האפליקציה — מדריך קצר</button>
   </div>
@@ -1373,7 +1375,7 @@ body.canvas #scroller{padding-bottom:58dvh}
 
 <div class="modal" id="help">
   <div class="sheetbox">
-    <h2>מדריך עבודה <span style="font-size:12px;font-weight:400;color:var(--muted)">· גרסה 7.3</span></h2>
+    <h2>מדריך עבודה <span style="font-size:12px;font-weight:400;color:var(--muted)">· גרסה 7.4</span></h2>
 
     <p style="background:var(--wine-soft);padding:9px 11px;border-radius:6px"><b>בקצרה:</b> בחר פורמט ← הכנס טקסט ← בחר צבע ← תצוגת הדפסה ← הדפסה. כל השאר הוא ליטוש.</p>
 
@@ -1589,7 +1591,7 @@ function save(){
     const d={cfg:CFG};
     if(CFG.editMode==="boxes")d.blocks=BLOCKS; else d.src=$("#src").value;
     if(SECTIONS.length)d.sections=SECTIONS;
-    if(Object.keys(IMG).length)d.img=IMG;
+    { const pk=imgPack(); if(Object.keys(pk).length)d.img=pk; }
     if(FLOATS.length)d.floats=FLOATS;
     d.cur=CURWORK;
     let named=false, okW=true;
@@ -1616,7 +1618,7 @@ function load(){
       if(CFG.fnRule==="line")CFG.fnRule="short";
       BLOCKS=Array.isArray(d.blocks)?d.blocks:[];
       SECTIONS=Array.isArray(d.sections)?d.sections:[];
-      IMG=(d.img&&typeof d.img==="object")?d.img:{};
+      imgUnpack(d.img);
       FLOATS=Array.isArray(d.floats)?d.floats:[];
       CURWORK=d.cur||"";
       $("#src").value=d.src||"";
@@ -2865,6 +2867,112 @@ function paintH(){
 let BLOCKS=[];
 const BTYPES={h1:"כותרת ראשית",h2:"כותרת משנה",h3:"כותרת קטנה",p:"פסקה",q:"ציטוט",li:"רשימה",img:"תמונה",orn:"עיטור מפריד",hr:"קו מפריד",pb:"מעבר עמוד"};
 let IMG={};   // מאגר התמונות: מזהה → נתוני התמונה
+/* ===== תמונות נשמרות במאגר הגדול של הדפדפן (IndexedDB), לא ב־5MB של האחסון הרגיל =====
+   בזיכרון IMG מחזיק תמיד את התמונה עצמה. באחסון נשמרת רק הפניה «@idb:מפתח». */
+const IDB={db:null,ok:false,key:{},val:{},pend:{},busy:{},ready:null,tmr:null};
+IDB.ready=new Promise(res=>{
+  try{
+    const r=indexedDB.open("sadar_img",1);
+    r.onupgradeneeded=()=>{ try{ r.result.createObjectStore("img"); }catch(e){} };
+    r.onsuccess=()=>{ IDB.db=r.result; IDB.ok=true; res(true); };
+    r.onerror=()=>res(false); r.onblocked=()=>res(false);
+  }catch(e){ res(false); }
+});
+function idbTx(mode,fn){
+  return new Promise(res=>{
+    if(!IDB.ok)return res(null);
+    try{ const t=IDB.db.transaction("img",mode), st=t.objectStore("img"); let out=null;
+      const rq=fn(st); if(rq)rq.onsuccess=()=>{ out=rq.result; };
+      t.oncomplete=()=>res(out===null||out===undefined?true:out); t.onerror=t.onabort=()=>res(null);
+    }catch(e){ res(null); }
+  });
+}
+const idbPut=(k,v)=>idbTx("readwrite",st=>{ st.put(v,k); });
+const idbGet=k=>idbTx("readonly",st=>st.get(k)).then(v=>typeof v==="string"?v:null);
+const idbKeys=()=>idbTx("readonly",st=>st.getAllKeys()).then(v=>Array.isArray(v)?v:[]);
+const idbDel=k=>idbTx("readwrite",st=>{ st.delete(k); });
+const idbNewKey=()=>"k"+Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+const isData=v=>typeof v==="string"&&v.indexOf("data:")===0;
+const isIdb=v=>typeof v==="string"&&v.indexOf("@idb:")===0;
+function imgReset(){ IMG={}; IDB.key={}; IDB.val={}; IDB.pend={}; }
+function imgPersist(id,v){
+  if(!IDB.ok||IDB.busy[id]===v)return;
+  IDB.busy[id]=v; const key=idbNewKey();
+  idbPut(key,v).then(ok=>{
+    if(IDB.busy[id]===v)delete IDB.busy[id];
+    if(ok&&IMG[id]===v){ IDB.key[id]=key; IDB.val[id]=v; clearTimeout(IDB.tmr); IDB.tmr=setTimeout(()=>{ try{ save(); }catch(e){} },250); }
+  });
+}
+/* מה שנכתב לאחסון: הפניה לתמונות שכבר נשמרו במאגר, והתמונה עצמה רק עד שהיא נשמרת שם */
+function imgPack(){
+  const o={};
+  for(const id in IMG){ const v=IMG[id];
+    if(isData(v)){ if(IDB.key[id]&&IDB.val[id]===v)o[id]="@idb:"+IDB.key[id]; else { o[id]=v; imgPersist(id,v); } }
+    else if(v!=null)o[id]=v; }
+  for(const id in IDB.pend)if(!(id in o))o[id]="@idb:"+IDB.pend[id];
+  return o;
+}
+function imgUnpack(o){
+  imgReset();
+  if(!o||typeof o!=="object")return;
+  for(const id in o){ const v=o[id]; if(isIdb(v))IDB.pend[id]=v.slice(5); else IMG[id]=v; }
+  imgHydrate();
+}
+async function imgHydrate(){
+  const pend=IDB.pend, ids=Object.keys(pend); if(!ids.length)return;
+  await IDB.ready; let got=0;
+  for(const id of ids){
+    const v=await idbGet(pend[id]);
+    if(IDB.pend!==pend)return;                 /* בינתיים נפתחה עבודה אחרת */
+    if(v){ IMG[id]=v; if(typeof MDL!=="undefined"&&MDL.img)MDL.img[id]=v; IDB.key[id]=pend[id]; IDB.val[id]=v; got++; }
+    delete pend[id];
+  }
+  if(got){ try{ render(); if($("#pp").classList.contains("on"))ppRefresh(); }catch(e){} }
+}
+/* ניקוי תמונות שאף עבודה כבר לא משתמשת בהן */
+async function imgSweep(){
+  if(!(await IDB.ready))return;
+  const used=new Set(), scan=o=>{ if(o&&o.img)for(const id in o.img){ const v=o.img[id]; if(isIdb(v))used.add(v.slice(5)); } };
+  try{ const w=works(); for(const n in w)scan(w[n]); scan(JSON.parse(localStorage.getItem(STORE)||"null")); }catch(e){ return; }
+  for(const id in IDB.key)used.add(IDB.key[id]); for(const id in IDB.pend)used.add(IDB.pend[id]);
+  (await idbKeys()).forEach(k=>{ if(!used.has(k))idbDel(k); });
+}
+/* הכנסת עבודה מקובץ: התמונות עוברות ישר למאגר הגדול */
+async function importPayload(n,d){
+  await IDB.ready; const img={};
+  for(const id in (d.img||{})){ const v=d.img[id];
+    if(isData(v)){ const key=idbNewKey(); img[id]=(await idbPut(key,v))?"@idb:"+key:v; }
+    else if(!isIdb(v)&&v!=null)img[id]=v; }
+  const w=works(); n=(n||"עבודה").trim()||"עבודה";
+  if(w[n]){ let i=2; while(w[n+" ("+i+")"])i++; n=n+" ("+i+")"; }
+  w[n]={cfg:d.cfg,blocks:d.blocks||[],sections:d.sections||[],floats:d.floats||[],img,src:d.src||"",t:d.t||Date.now()};
+  return worksSet(w)?n:null;
+}
+async function backupAll(){
+  persistWork(); await IDB.ready;
+  const w=works(), out={}; let lost=0;
+  for(const n in w){ const pl=JSON.parse(JSON.stringify(w[n]));
+    for(const id in (pl.img||{})){ const v=pl.img[id];
+      if(isIdb(v)){ const dt=(IMG[id]&&n===CURWORK&&isData(IMG[id]))?IMG[id]:await idbGet(v.slice(5)); if(dt)pl.img[id]=dt; else { delete pl.img[id]; lost++; } } }
+    out[n]=pl; }
+  const cnt=Object.keys(out).length;
+  if(!cnt){ alert("אין עדיין עבודות לגבות."); return; }
+  const dt=new Date(), nm="גיבוי סדר "+dt.toLocaleDateString("he-IL").replace(/[./]/g,"-")+".json";
+  const bl=new Blob([JSON.stringify({sadarBackup:1,date:dt.toISOString(),works:out})],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(bl); a.download=nm; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),6000);
+  try{ localStorage.setItem("sadar_bk",String(Date.now())); }catch(e){}
+  homeBkNote();
+  alert("הגיבוי ירד לתיקיית ההורדות: "+nm+"\n"+cnt+" עבודות"+(lost?" ("+lost+" תמונות לא נמצאו ולא נכללו)":"")+".\nכדאי לשמור אותו גם בדרייב או לשלוח לעצמך בוואטסאפ.");
+}
+function homeBkNote(){
+  const el=$("#homeBk"); if(!el)return;
+  const n=Object.keys(works()).length, t=+localStorage.getItem("sadar_bk")||0;
+  if(!n){ el.textContent=""; return; }
+  const days=t?Math.floor((Date.now()-t)/86400000):-1;
+  el.textContent=days<0?"העבודות שמורות רק בטלפון הזה. עדיין לא נעשה גיבוי.":(days===0?"גיבוי אחרון: היום":"גיבוי אחרון: לפני "+days+" ימים");
+  el.style.color=(days<0||days>14)?"#e0a6a0":"";
+}
 const TEXTY=["h1","h2","h3","p","q","li"];
 const mk3=()=>Math.random().toString(36).slice(2,8);
 const MK=(i)=>"⟦"+i+"⟧";
@@ -3510,6 +3618,7 @@ function homeRender(){
   const h=$("#homeList"); if(!h)return;
   const w=works(), ks=Object.keys(w).sort((a,b)=>(w[b].t||0)-(w[a].t||0));
   $("#homeSec").style.display=ks.length?"":"none";
+  homeBkNote();
   if(!ks.length){
     h.innerHTML='<div class="hempty">אין עדיין עבודות שמורות.<br>לחץ «התחלת עבודה חדשה» כדי להתחיל.</div>';
     return;
@@ -3528,14 +3637,14 @@ function homeRender(){
 function setCurWork(n){
   CURWORK=n||"";
   const el=$("#curWork");
-  if(el)el.textContent=CURWORK?CURWORK:"עימוד חוברות · 7.3";
+  if(el)el.textContent=CURWORK?CURWORK:"עימוד חוברות · 7.4";
   const wn=$("#workName"); if(wn)wn.value=CURWORK;
 }
 function newWorkAs(n,over){
   persistWork();
   CFG=JSON.parse(JSON.stringify(DEF));
   if(over)Object.assign(CFG,over);
-  BLOCKS=[]; SECTIONS=[]; FLOATS=[]; IMG={};
+  BLOCKS=[]; SECTIONS=[]; FLOATS=[]; imgReset();
   $("#src").value=""; if($("#simpleText"))$("#simpleText").value="";
   CV.sel=null; CV.page=1; UNDO.length=0; REDO.length=0;
   n=(n||"").trim()||("עבודה "+new Date().toLocaleDateString("he-IL"));
@@ -3564,7 +3673,7 @@ function openWork(n){
   ["h1","h2","h3"].forEach(k=>CFG[k]=Object.assign({},DEF[k],(d.cfg||{})[k]||{}));
   cfgMigrate(d.cfg);
   BLOCKS=d.blocks||[]; SECTIONS=d.sections||[]; FLOATS=d.floats||[];
-  IMG=(d.img&&typeof d.img==="object")?d.img:{};
+  imgUnpack(d.img);
   $("#src").value=d.src||""; if($("#simpleText"))$("#simpleText").value=d.src||"";
   CV.sel=null; CV.page=1;
   setCurWork(n);
@@ -3581,24 +3690,34 @@ $("#homeList").addEventListener("click",e=>{
   if(d){
     if(!confirm("למחוק לצמיתות את «"+d.dataset.hd+"»?\nאי אפשר לבטל."))return;
     const w=works(); delete w[d.dataset.hd]; worksSet(w);
-    if(CURWORK===d.dataset.hd)setCurWork("");
-    homeRender(); workRender();
+    if(CURWORK===d.dataset.hd){
+      /* העבודה שנמחקה הייתה פתוחה — מנקים גם את מה שנשאר ממנה בזיכרון */
+      setCurWork(""); CFG=JSON.parse(JSON.stringify(DEF)); BLOCKS=[]; SECTIONS=[]; FLOATS=[]; imgReset();
+      $("#src").value=""; if($("#simpleText"))$("#simpleText").value="";
+      CV.sel=null; CV.page=1; UNDO.length=0; REDO.length=0;
+      try{ buildGalleries(); paint(); paintH(); render(); }catch(x){}
+      save();
+    }
+    homeRender(); workRender(); setTimeout(imgSweep,1500);
   }
 });
-$("#homeFile").addEventListener("change",e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    try{
-      const d=JSON.parse(ev.target.result); if(!d||!d.cfg)throw 0;
-      let n=(d.cfg.coverTitle||d.cfg.mastName||f.name.replace(/\.[^.]+$/,"")||"עבודה").trim();
-      const w=works(); if(w[n]){ let i=2; while(w[n+" ("+i+")"])i++; n=n+" ("+i+")"; }
-      w[n]={cfg:d.cfg,blocks:d.blocks||[],sections:d.sections||[],floats:d.floats||[],img:d.img||{},src:d.src||"",t:Date.now()};
-      if(worksSet(w)){ homeRender(); openWork(n); }
-    }catch(x){ alert("הקובץ אינו קובץ עבודה תקין."); }
-  };
-  r.readAsText(f);
+$("#homeFile").addEventListener("change",async e=>{
+  const f=e.target.files[0]; if(!f)return; e.target.value="";
+  try{
+    const d=JSON.parse(await f.text());
+    if(d&&d.sadarBackup&&d.works){
+      const names=Object.keys(d.works); if(!names.length)throw 0;
+      if(!confirm("בקובץ הגיבוי "+names.length+" עבודות. להוסיף אותן לרשימה?\nעבודות קיימות לא יימחקו."))return;
+      let ok=0; for(const n of names){ if(d.works[n]&&d.works[n].cfg&&await importPayload(n,d.works[n]))ok++; }
+      homeRender(); alert("שוחזרו "+ok+" עבודות מתוך "+names.length+".");
+      return;
+    }
+    if(!d||!d.cfg)throw 0;
+    const n=await importPayload(d.cfg.coverTitle||d.cfg.mastName||f.name.replace(/\.[^.]+$/,""),d);
+    if(n){ homeRender(); openWork(n); }
+  }catch(x){ alert("הקובץ אינו קובץ עבודה או גיבוי תקין."); }
 });
+$("#homeBackup").onclick=()=>backupAll();
 
 /* ================= עבודות ================= */
 const WKEY="sadar_works";
@@ -3607,7 +3726,7 @@ function worksSet(o){ try{localStorage.setItem(WKEY,JSON.stringify(o));return tr
   if(window.__quotaTold)return false; window.__quotaTold=true;
   alert("אין מספיק מקום במכשיר לשמור עבודה נוספת. מחק עבודה ישנה, או שמור אותה לקובץ בלשונית «ייצוא».");return false} }
 function workPayload(){
-  return {cfg:CFG,blocks:BLOCKS,sections:SECTIONS,floats:FLOATS,img:IMG,src:$("#src").value,
+  return {cfg:CFG,blocks:BLOCKS,sections:SECTIONS,floats:FLOATS,img:imgPack(),src:$("#src").value,
           t:Date.now()};
 }
 function workRender(){
@@ -3627,7 +3746,7 @@ function workLoadObj(d){
   CFG=Object.assign(JSON.parse(JSON.stringify(DEF)),d.cfg||{});
   ["h1","h2","h3"].forEach(k=>CFG[k]=Object.assign({},DEF[k],(d.cfg||{})[k]||{}));
   BLOCKS=d.blocks||[]; SECTIONS=d.sections||[]; FLOATS=d.floats||[];
-  IMG=(d.img&&typeof d.img==="object")?d.img:{};
+  imgUnpack(d.img);
   $("#src").value=d.src||""; if($("#simpleText"))$("#simpleText").value=d.src||"";
   CV.sel=null; CV.page=1;
   buildGalleries(); paint(); paintH(); render(); save(); workRender();
@@ -3995,7 +4114,7 @@ $("#pmenu").addEventListener("click",e=>{
   else if(a==="5"){
     if(!confirm("למחוק את כל התוכן של העבודה הזו?\nההגדרות והשם נשמרים. אפשר לבטל עם ↶"))return;
     pushUndo();
-    BLOCKS=[]; FLOATS=[]; SECTIONS=[]; IMG={};
+    BLOCKS=[]; FLOATS=[]; SECTIONS=[]; imgReset();
     $("#src").value=""; if($("#simpleText"))$("#simpleText").value="";
     CV.sel=null; CV.page=1;
     if(typeof renderBuilder==="function")renderBuilder();
@@ -4008,7 +4127,7 @@ $("#pmenu").addEventListener("click",e=>{
     const name=CURWORK;
     setCurWork("");
     CFG=JSON.parse(JSON.stringify(DEF));
-    BLOCKS=[]; SECTIONS=[]; FLOATS=[]; IMG={};
+    BLOCKS=[]; SECTIONS=[]; FLOATS=[]; imgReset();
     $("#src").value=""; if($("#simpleText"))$("#simpleText").value="";
     CV.sel=null; CV.page=1; UNDO.length=0; REDO.length=0;
     buildGalleries(); paint(); paintH(); render(); save();
@@ -6131,7 +6250,7 @@ $("#wsLoad").addEventListener("change",async e=>{
     ["h1","h2","h3"].forEach(k=>CFG[k]=Object.assign({},DEF[k],d.cfg[k]||{}));
     BLOCKS=Array.isArray(d.blocks)?d.blocks:[];
     SECTIONS=Array.isArray(d.sections)?d.sections:[];
-    IMG=(d.img&&typeof d.img==="object")?d.img:{};
+    imgUnpack(d.img);
     FLOATS=Array.isArray(d.floats)?d.floats:[];
     $("#src").value=d.src||"";
     if(d.presets)try{localStorage.setItem(PKEY,JSON.stringify(d.presets));fillPresets();}catch(x){}
@@ -6195,6 +6314,8 @@ render();
 if(location.protocol==="https:"&&"serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
+IDB.ready.then(ok=>{ if(ok){ try{ save(); }catch(e){} setTimeout(imgSweep,4000); } });
+if(location.protocol==="https:"&&navigator.storage&&navigator.storage.persist){ navigator.storage.persist().catch(()=>{}); }
 grpInit();
 setCurWork(CURWORK);
 workRender(); homeRender();
