@@ -1,5 +1,5 @@
 /* סדר — רשת קודם: כל פתיחה מביאה את הגרסה האחרונה; בלי רשת נפתחת הגרסה השמורה */
-const C="sadar-v2";
+const C="sadar-v3";
 self.addEventListener("install",e=>{ self.skipWaiting(); });
 self.addEventListener("activate",e=>{ e.waitUntil(self.clients.claim()); });
 self.addEventListener("fetch",e=>{

@@ -752,7 +752,7 @@ body.canvas #scroller{padding-bottom:58dvh}
             <div class="row"><label>מרווח בין טורים</label><input type="range" data-cfg="colGap" min="3" max="20" step="1"><span class="val" data-for="colGap"></span></div>
             <div class="row">
               <label>קו מפריד בין הטורים</label>
-              <span class="sw"><input type="checkbox" data-cfg="colRule"><i></i></span>
+              <span class="sw"><input type="checkbox" data-cfg="colLine"><i></i></span>
             </div>
           </div>
 
@@ -1373,7 +1373,7 @@ body.canvas #scroller{padding-bottom:58dvh}
 
 <div class="modal" id="help">
   <div class="sheetbox">
-    <h2>מדריך עבודה <span style="font-size:12px;font-weight:400;color:var(--muted)">· גרסה 7.2</span></h2>
+    <h2>מדריך עבודה <span style="font-size:12px;font-weight:400;color:var(--muted)">· גרסה 7.3</span></h2>
 
     <p style="background:var(--wine-soft);padding:9px 11px;border-radius:6px"><b>בקצרה:</b> בחר פורמט ← הכנס טקסט ← בחר צבע ← תצוגת הדפסה ← הדפסה. כל השאר הוא ליטוש.</p>
 
@@ -1542,7 +1542,7 @@ const DEF={
   srcMode:"md", lineIsPara:false,
   pageSize:"A5", pwCustom:148, phCustom:210, orient:"portrait", dir:"rtl",
   mirror:true, mTop:14, mBot:16, mIn:16, mOut:11,
-  cols:1, colGap:8, colRule:false,
+  cols:1, colGap:8, colLine:false,
   coverOn:false, coverTitle:"", coverSub:"", coverFoot:"",
   tocOn:false, tocTitle:"תוכן העניינים", tocLevels:2,
   vjust:true,
@@ -1592,9 +1592,10 @@ function save(){
     if(Object.keys(IMG).length)d.img=IMG;
     if(FLOATS.length)d.floats=FLOATS;
     d.cur=CURWORK;
-    localStorage.setItem(STORE,JSON.stringify(d));
-    if(CURWORK){ try{ const w=works(); if(w[CURWORK]){ w[CURWORK]=workPayload(); worksSet(w);} }catch(e){} }
-    SAVEFAIL="";
+    let named=false, okW=true;
+    if(CURWORK){ const w=works(); if(w[CURWORK]){ named=true; w[CURWORK]=workPayload(); okW=worksSet(w); } }
+    localStorage.setItem(STORE,JSON.stringify(named&&okW?{cur:CURWORK}:d));
+    SAVEFAIL=okW?"":"quota";
   }catch(e){
     SAVEFAIL=(e&&e.name==="QuotaExceededError")?"quota":"blocked";
   }
@@ -1602,9 +1603,12 @@ function save(){
 }
 function load(){
   try{
-    const d=JSON.parse(localStorage.getItem(STORE)||"null");
+    let d=JSON.parse(localStorage.getItem(STORE)||"null");
+    /* כשיש עבודה בשם, התוכן שמור פעם אחת בלבד — ברשימת העבודות */
+    if(d&&d.cur&&!d.cfg){ const wk=works()[d.cur]; d=wk?Object.assign({},wk,{cur:d.cur}):null; }
     if(d){ CFG=Object.assign(JSON.parse(JSON.stringify(DEF)),d.cfg||{});
       ["h1","h2","h3"].forEach(k=>CFG[k]=Object.assign({},DEF[k],(d.cfg||{})[k]||{}));
+      cfgMigrate(d.cfg);
       if(typeof CFG.rhRule==="boolean")CFG.rhRule=CFG.rhRule?"thin":"none";
       const MAPO={orn:"flourish",line:"thin"};
       if(MAPO[CFG.rhRule])CFG.rhRule=MAPO[CFG.rhRule];
@@ -1982,9 +1986,9 @@ function makePage(idx){
   const boxes=[];
   for(let i=0;i<n;i++){
     const c=document.createElement("div");
-    c.className="col"+((CFG.colRule&&i<n-1)?" rule":"");
-    if(CFG.colRule&&i<n-1)c.style.paddingInlineEnd=MM(CFG.colGap/2);
-    if(CFG.colRule&&i>0)c.style.paddingInlineStart=MM(CFG.colGap/2);
+    c.className="col"+((CFG.colLine&&i<n-1)?" rule":"");
+    if(CFG.colLine&&i<n-1)c.style.paddingInlineEnd=MM(CFG.colGap/2);
+    if(CFG.colLine&&i>0)c.style.paddingInlineStart=MM(CFG.colGap/2);
     cols.appendChild(c); boxes.push(c);
   }
   const mast=document.createElement("div"); mast.className="masthead";
@@ -3080,7 +3084,7 @@ function qdMast(mast){
   const strip=(st)=>info?'<div style="'+ex+'font:600 '+(F*0.8)+'pt \'Assistant\',sans-serif;letter-spacing:.04em;text-align:center;padding:2.2pt 4pt;'+st+'">'+E(info)+'</div>':"";
   const TF="font-family:'Frank Ruhl Libre',serif;font-weight:900;line-height:1.04;";
   let h="";
-  const bImg=D.mastImg&&IMG[D.mastImg];
+  const bImg=D.mastImg&&imgRes(IMG[D.mastImg]);
   if(bImg){
     const lightTx=D.imgDark!==false;
     const mT=+CFG.mTop, mI=+CFG.mIn, mO=+CFG.mOut;
@@ -3524,7 +3528,7 @@ function homeRender(){
 function setCurWork(n){
   CURWORK=n||"";
   const el=$("#curWork");
-  if(el)el.textContent=CURWORK?CURWORK:"עימוד חוברות · 7.2";
+  if(el)el.textContent=CURWORK?CURWORK:"עימוד חוברות · 7.3";
   const wn=$("#workName"); if(wn)wn.value=CURWORK;
 }
 function newWorkAs(n,over){
@@ -3547,12 +3551,18 @@ function persistWork(){
   if(!CURWORK)return;
   const w=works(); w[CURWORK]=workPayload(); worksSet(w);
 }
+function cfgMigrate(raw){
+  raw=raw||{};
+  if(typeof CFG.colRule!=="string"){ if(!("colLine" in raw))CFG.colLine=!!CFG.colRule; CFG.colRule=DEF.colRule; }
+  else if(!("colLine" in raw))CFG.colLine=+CFG.cols>1;      /* עבודות ישנות נראו תמיד עם קו */
+}
 function openWork(n){
   const w=works(), d=w[n]; if(!d)return;
   persistWork();
   UNDO.length=0; REDO.length=0;
   CFG=Object.assign(JSON.parse(JSON.stringify(DEF)),d.cfg||{});
   ["h1","h2","h3"].forEach(k=>CFG[k]=Object.assign({},DEF[k],(d.cfg||{})[k]||{}));
+  cfgMigrate(d.cfg);
   BLOCKS=d.blocks||[]; SECTIONS=d.sections||[]; FLOATS=d.floats||[];
   IMG=(d.img&&typeof d.img==="object")?d.img:{};
   $("#src").value=d.src||""; if($("#simpleText"))$("#simpleText").value=d.src||"";
@@ -3594,6 +3604,7 @@ $("#homeFile").addEventListener("change",e=>{
 const WKEY="sadar_works";
 function works(){ try{return JSON.parse(localStorage.getItem(WKEY)||"{}")}catch(e){return{}} }
 function worksSet(o){ try{localStorage.setItem(WKEY,JSON.stringify(o));return true}catch(e){
+  if(window.__quotaTold)return false; window.__quotaTold=true;
   alert("אין מספיק מקום במכשיר לשמור עבודה נוספת. מחק עבודה ישנה, או שמור אותה לקובץ בלשונית «ייצוא».");return false} }
 function workPayload(){
   return {cfg:CFG,blocks:BLOCKS,sections:SECTIONS,floats:FLOATS,img:IMG,src:$("#src").value,
@@ -3914,7 +3925,7 @@ const STPRESET={
     mastOn:false,palette:"bw",pnOn:true,pnPos:"bottom-center",uiMode:"simple",
     jobBind:"הידוק אמצע (קונטרס)",mirror:true,vjust:true}},
   alon:{label:"עלון",cfg:{pageSize:"A4",orient:"portrait",out:"pages",sheetPaper:"auto",cols:2,colGap:9,
-    colRule:true,mastOn:true,mastStyle:"band",palette:"wine",pnOn:false,rhOn:false,
+    colLine:true,mastOn:true,mastStyle:"band",palette:"wine",pnOn:false,rhOn:false,
     fsize:10.5,uiMode:"pro",tab:"p-alon",jobBind:"ללא כריכה (דף בודד)"}},
   book:{label:"חוברת",cfg:{pageSize:"A5",orient:"portrait",out:"pages",sheetPaper:"auto",cols:1,
     mastOn:false,palette:"bw",pnOn:true,rhOn:true,uiMode:"pro",tab:"p-text",
@@ -4636,7 +4647,7 @@ $("#btnReset").onclick=()=>{
 /* ================= תבניות ================= */
 const TEMPLATES=[
 {name:"קונטרס תורני",
- cfg:{pageSize:"custom",pwCustom:167,phCustom:236,cols:2,colGap:9,colRule:false,
+ cfg:{pageSize:"custom",pwCustom:167,phCustom:236,cols:2,colGap:9,colLine:false,
   font:"'David Libre',serif",fsize:11,lh:1.62,align:"justify",indent:0,pspace:3,
   mirror:true,mTop:13,mBot:15,mIn:15,mOut:11,
   rhOn:true,rhText:"{כותרת}",rhPos:"top",rhRule:"flourish",
@@ -5015,25 +5026,25 @@ function qSections(){
 const Q_DESIGNS=[
  {k:"headline",n:"כותרת ראשית",pal:"orange",
   qd:{mast:"solid",lead:1,dc:"sq",h2:"bullet",box:"tint",leadSize:3},
-  cfg:{cols:3,colGap:6,colRule:false,fsize:10,lh:1.48,h2Band:false,
+  cfg:{cols:3,colGap:6,colLine:false,fsize:10,lh:1.48,h2Band:false,
    h2:{size:13,weight:700,style:"normal",align:"start",deco:"none",before:7,after:2,track:0}}},
  {k:"classic",n:"פסי צבע",pal:"wine",qd:null,cfg:{}},
  {k:"framed",n:"מסגרת",pal:"royal",
   qd:{mast:"outline",lead:1,dc:"plain",h2:"tab",box:"line",leadSize:2.6},
-  cfg:{cols:2,colGap:8,colRule:true,fsize:10.5,h2Band:false,frame:"double",frameScope:"all",frameInset:5,mTop:15,mBot:15,mIn:15,mOut:15,
+  cfg:{cols:2,colGap:8,colLine:true,fsize:10.5,h2Band:false,frame:"double",frameScope:"all",frameInset:5,mTop:15,mBot:15,mIn:15,mOut:15,
    h2:{size:12.5,weight:700,style:"normal",align:"start",deco:"none",before:7,after:3,track:0}}},
  {k:"parch",n:"קלף",pal:"gold",
   qd:{mast:"parch",lead:0,dc:"plain",h2:null},
-  cfg:{cols:2,colGap:9,colRule:false,fsize:10.8,lh:1.55,h2Band:false,bgOn:true,frame:"ornate",frameScope:"all",frameInset:5,
+  cfg:{cols:2,colGap:9,colLine:false,fsize:10.8,lh:1.55,h2Band:false,bgOn:true,frame:"ornate",frameScope:"all",frameInset:5,
    mTop:16,mBot:16,mIn:16,mOut:16,ornDiv:"flourish",
    h2:{size:13.5,weight:700,style:"normal",align:"center",deco:"under",before:8,after:3,track:0}}},
  {k:"mag",n:"מגזין",pal:"teal",
   qd:{mast:"grad",lead:1,dc:null,h2:"bar",box:"tint",toc:1,leadFont:"'Assistant',sans-serif",leadW:700,leadSize:2.7},
-  cfg:{cols:2,colGap:9,colRule:false,font:"'Assistant',sans-serif",fsize:10.2,lh:1.55,h2Band:false,
+  cfg:{cols:2,colGap:9,colLine:false,font:"'Assistant',sans-serif",fsize:10.2,lh:1.55,h2Band:false,
    h2:{size:13,weight:700,style:"normal",align:"start",deco:"none",before:7,after:3,track:0}}},
  {k:"press",n:"עיתון",pal:"bw",
   qd:{mast:"press",lead:1,dc:"plain",h2:"rule",leadSize:3.3},
-  cfg:{cols:3,colGap:6,colRule:true,font:"'Frank Ruhl Libre',serif",fsize:9.6,lh:1.45,h2Band:false,
+  cfg:{cols:3,colGap:6,colLine:true,font:"'Frank Ruhl Libre',serif",fsize:9.6,lh:1.45,h2Band:false,
    h2:{size:13.5,weight:700,style:"normal",align:"start",deco:"none",before:7,after:2,track:0}}}
 ];
 function qdThumb(k){
@@ -5156,14 +5167,14 @@ function qBuild(type,name){
   });
   const base={editMode:"text",srcMode:"md",uiMode:"simple",tab:"p-text",font:"'David Libre',serif",
     align:"justify",vjust:true,mirror:true,frame:"none",h2Band:false,mastOn:false,coverOn:false,tocOn:false,
-    rhOn:false,colRule:false,sigSize:0,lookPick:"plain"};
+    rhOn:false,colLine:false,sigSize:0,lookPick:"plain"};
   const T={
-   alon:{pageSize:"A4",out:"pages",sheetPaper:"auto",cols:2,colGap:8,colRule:true,mTop:12,mBot:13,mIn:12,mOut:12,mirror:false,
+   alon:{pageSize:"A4",out:"pages",sheetPaper:"auto",cols:2,colGap:8,colLine:true,mTop:12,mBot:13,mIn:12,mOut:12,mirror:false,
      fsize:10.5,lh:1.5,pspace:3,mastOn:true,mastName:name,mastStyle:"band",mastSize:2.8,h2Band:true,pnOn:false,ornDiv:"diamond",
      h1:{size:16,weight:700,style:"normal",align:"center",deco:"none",before:4,after:4,track:0},
      h2:{size:12.5,weight:700,style:"normal",align:"start",deco:"none",before:6,after:3,track:0},
      jobBind:"ללא כריכה (דף בודד)"},
-   iton:{pageSize:"A4",out:"pages",sheetPaper:"auto",cols:3,colGap:6,colRule:true,mTop:12,mBot:13,mIn:11,mOut:11,mirror:false,
+   iton:{pageSize:"A4",out:"pages",sheetPaper:"auto",cols:3,colGap:6,colLine:true,mTop:12,mBot:13,mIn:11,mOut:11,mirror:false,
      font:"'Frank Ruhl Libre',serif",fsize:9.6,lh:1.45,pspace:2.5,mastOn:true,mastName:name,mastStyle:"split",mastSize:3.2,
      pnOn:true,pnPos:"bottom-center",pnFmt:"num",pnSkipFirst:false,ornDiv:"dots",
      h1:{size:22,weight:700,style:"normal",align:"start",deco:"none",before:2,after:4,track:0},
@@ -5330,8 +5341,14 @@ const MODELS=[
 const MDL={snap:null,img:null,busy:false,stop:false,cur:null,page:0,size:4};
 MODELS.forEach(m=>m.cache={});
 const mdlC=m=>m.cache[MDL.size];
-function mdlBanner(m){ if(!m.ban)return null; if(m.ban==="gold")return BAN_GOLD;
-  return svgURL(BANSVG[m.ban](PALETTES.find(x=>x.k===m.pal).c)); }
+function mdlBanner(m){ return m.ban?("@ban:"+m.ban+":"+m.pal):null; }
+const IMGRES={};
+function imgRes(v){
+  if(typeof v!=="string"||v.indexOf("@ban:")!==0)return v;
+  if(IMGRES[v])return IMGRES[v];
+  const q=v.split(":"), pl=PALETTES.find(x=>x.k===q[2])||PALETTES[0];
+  return IMGRES[v]=(q[1]==="gold"||!BANSVG[q[1]])?BAN_GOLD:svgURL(BANSVG[q[1]](pl.c));
+}
 const MDL_ILL={
   candles(c){ const fl=(x)=>'<ellipse cx="'+x+'" cy="150" rx="46" ry="60" fill="#ffd97a" opacity=".28"/><path d="M'+x+' 108c16 22 16 44 0 58c-16-14-16-36 0-58z" fill="#ffc94a"/>'+
       '<path d="M'+x+' 128c7 11 7 22 0 30c-7-8-7-19 0-30z" fill="#fff6d0"/><rect x="'+(x-13)+'" y="166" width="26" height="150" rx="4" fill="#f6efe0"/>'+
@@ -5718,6 +5735,7 @@ function ppRender(){
   ppApply();
 }
 $("#ppPages").addEventListener("click",e=>{
+  ppFlush();
   const el=e.target.closest("[data-ln]");
   if(!el){ if(ppPick){ ppPick=null; ppPickBar(); ppMarkSel(); } return; }
   const ln=+el.dataset.ln;
@@ -5888,10 +5906,11 @@ function qkSyncFromMd(txt){
   });
   CFG.qk.raw=out.join("\n").replace(/\n{3,}/g,"\n\n"); CFG.qk.yes=yes; CFG.qk.no=no; CFG.qk.lines=null; CFG.qk.fromFile=false;
 }
+function ppFlush(){ if(PPED.flush){ const f=PPED.flush; PPED.flush=null; f(); } }
 function ppRefresh(){ const y=$(".ppscroll").scrollTop; ppRender(); $(".ppscroll").scrollTop=y; }
 function ppPickBar(){
   let bar=$("#ppPick");
-  if(!ppPick){ if(bar)bar.remove(); PPED.undo=false; PPED.sub=""; const sc0=$(".ppscroll"); if(sc0)sc0.style.paddingBottom=""; return; }
+  if(!ppPick){ ppFlush(); if(bar)bar.remove(); PPED.undo=false; PPED.sub=""; const sc0=$(".ppscroll"); if(sc0)sc0.style.paddingBottom=""; return; }
   if(bar&&PPED.keep&&bar.dataset.ln===String(ppPick.ln)){ PPED.keep=false; return; }
   PPED.keep=false;
   if(!bar){ bar=document.createElement("div"); bar.id="ppPick"; $("#pp .ppbox").appendChild(bar); }
@@ -5939,18 +5958,22 @@ function ppPickBar(){
   const reselect=(n)=>{ ppPick=n==null?null:{ln:n,txt:""}; ppRefresh(); };
   /* עריכת טקסט חיה */
   const ta=$("#pkTxt",bar);
-  const commit=(newType)=>{
+  const commit=(newType,quiet)=>{
+    PPED.tmr=null;
     const A=srcLines(), [s0,e0]=ppRange(A,ln), t=ta.value.replace(/\s*\n+\s*/g," ").trim();
     if(!t)return;
     const kind=newType||ppLineType(A[ln]);
     if(!PPED.undo){ pushUndo(); PPED.undo=true; }
     A.splice(s0,e0-s0,(PP_PRE[kind]||"")+t);
     srcSet(A);
+    if(quiet)return;
     if(newType){ PPED.keep=false; reselect(s0); } else { PPED.keep=true; ppRefresh(); }
   };
+  PPED.flush=ta?(()=>{ if(PPED.tmr){ clearTimeout(PPED.tmr); commit(null,true); } }):null;
   if(ta){
     ta.addEventListener("input",()=>{ clearTimeout(PPED.tmr); PPED.tmr=setTimeout(()=>commit(null),420); });
     $$("[data-pt]",bar).forEach(b=>b.onclick=()=>{ clearTimeout(PPED.tmr); commit(b.dataset.pt); });
+    ta.addEventListener("blur",()=>{ if(PPED.tmr){ clearTimeout(PPED.tmr); commit(null); } });
     $$("[data-pf]",bar).forEach(b=>b.onclick=()=>{
       const mk={b:"**",i:"*",u:"__"}[b.dataset.pf], a0=ta.selectionStart, a1=ta.selectionEnd;
       if(a0===a1){ alert("סמן קודם את המילים בתוך התיבה, ואז לחץ על הכפתור."); return; }
@@ -5960,7 +5983,7 @@ function ppPickBar(){
   }
   $$("[data-px]",bar).forEach(b=>b.onclick=()=>{ PPED.sub=PPED.sub===b.dataset.px?"":b.dataset.px; ppPickBar(); });
   $$("[data-ed]",bar).forEach(b=>b.onclick=()=>{
-    clearTimeout(PPED.tmr);
+    ppFlush();
     const k=b.dataset.ed, A=srcLines(); pushUndo();
     if(k==="add"){ const [,e0]=ppRange(A,ln); A.splice(e0,0,"","פסקה חדשה"); srcSet(A); PPED.sub=""; reselect(e0+1);
       setTimeout(()=>{ const t2=$("#pkTxt"); if(t2){ t2.focus(); t2.select(); } },60); return; }
@@ -5993,7 +6016,7 @@ function ppPickBar(){
   });
   $$("[data-pi]",bar).forEach(b=>b.onclick=()=>{ PPIMG={ln,wrap:b.dataset.pi==="w"}; PPED.sub=""; $("#ppImgPick").click(); });
   $$("[data-pk]",bar).forEach(b=>b.onclick=()=>{
-    clearTimeout(PPED.tmr);
+    ppFlush();
     if(b.dataset.pk==="x"){ ppPick=null; ppPickBar(); ppMarkSel(); return; }
     if(b.dataset.pk==="delimg"){ pushUndo(); const A0=srcLines(); A0.splice(ln,1); if(!(A0[ln]||"").trim())A0.splice(ln,1); srcSet(A0); reselect(null); return; }
     pushUndo();
@@ -6034,7 +6057,7 @@ $("#preview").addEventListener("click",e=>{
   pickImageFor(id);
 });
 $("#btnPP").onclick=()=>{ ZPP.z=null; $("#pp").classList.add("on"); setTimeout(ppRender,30); };
-$("#ppClose").onclick=()=>$("#pp").classList.remove("on");
+$("#ppClose").onclick=()=>{ ppFlush(); ppPick=null; ppPickBar(); $("#pp").classList.remove("on"); };
 $("#ppPrint").onclick=()=>{
   if(CFG.duplex==="manual"){
     if(!confirm("בחרת הדפסה ידנית.\nעדיף ללחוץ «הדפס צד א׳» ואחר כך «הדפס צד ב׳».\nלהדפיס בכל זאת הכול ברצף?"))return;
